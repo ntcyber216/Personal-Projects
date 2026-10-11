@@ -21,5 +21,5 @@ Q6: What hashing algorithm should I use? A: The main 2 I even know of are SHA-25
 ## Acknowledgements 
 Before we get into the project, I want to clarify that this project is made purely as a learning exercise. For this project I will utilize AI (Claude) to help guide my search and teach me fundamental concepts for me to implement. All code will be written independently by me.
 
-### Motivations
+## Motivations
 Why did I want to do this? To start, I recently acquired my CompTIA Security+ Certification, but my experience with personal projects was rather limited. There were many things I learned about while studying that gave me ideas for projects, Intrusion Detection Systems, Intrusion Prevention Systems, File Integrity Monitors, DNS Sinkholes, DHCP, Firewall rules, Access control, maybe even simulating a RADIUS interaction, but FIM seemed like a great way to both refresh my rusty Python skills and get my first working cybersecurity related application. As a bonus, I also get to learn how to use Github to store all of my future projects.
