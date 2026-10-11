@@ -1,0 +1,18 @@
+# File Integrity Monitor
+
+## Overview
+This will be a Python-based file integrity monitoring tool to detect any changes within a user specified set of files/directories.
+
+## Design Decisions
+To get started with this project, I first wanted to look at the scope of what I was making. To do that, there are a few questions that govern how this will be structured:
+1. Q: What files does it monitor? A: I want this to be used in a sort of "natural" way, so having it monitor user defined files is best.
+2. Q: When does it check? A: I do not want this to be a resource drain or a very strict program, so on device startup and user defined intervals.
+3. Q: What does it do when it finds a change? This project is mainly for my learning, so I want it to log any changes to improve my understanding of log analysis.
+4. Q: What does it store? The base hashes and data need to be stored somewhere, and to get more comfortable with SQL I will have the storage within a SQLite database.
+5. Q: What events should it detect? As of the beginning of the project, just modification will do, but if I want to do more later then I will also add file addition and deletion.
+
+## Acknowledgements 
+Before we get into the project, I want to clarify that this project is made purely as a learning exercise. For this project I will utilize AI (Claude) to help guide my search and teach me fundamental concepts for me to implement. All code will be written independently by me.
+
+### Motivations
+Why did I want to do this? To start, I recently acquired my CompTIA Security+ Certification, but my experience with personal projects was rather limited. There were many things I learned about while studying that gave me ideas for projects, Intrusion Detection Systems, Intrusion Prevention Systems, File Integrity Monitors, DNS Sinkholes, DHCP, Firewall rules, Access control, maybe even simulating a RADIUS interaction, but FIM seemed like a great way to both refresh my rusty Python skills and get my first working cybersecurity related application. As a bonus, I also get to learn how to use Github to store all of my future projects.
