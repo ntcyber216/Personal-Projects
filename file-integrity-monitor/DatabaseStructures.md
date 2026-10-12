@@ -16,6 +16,6 @@
 | column_name | data_type | purpose |
 |-------------|-----------|---------|
 | id          | INTEGER   | unique identifier |
-| interval    | TEXT      | the user defined time interval of checks |
+| interval    | INTEGER      | the user defined time interval of checks |
 | timestamp   | TEXT      | when this config was created |
 | filepath    | TEXT      | the path the user wishes to monitor|
