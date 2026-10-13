@@ -2,7 +2,7 @@ import sqlite3
 import hashlib
 import os
 import logging
-
+from datetime import datetime
 FIM_DIR = os.path.expanduser("~/.fim")
 DB_PATH = os.path.expanduser("~/.fim/fim_data.db")
 
@@ -68,7 +68,7 @@ def scan_hash(filepath):
   Scans each file recursively within the specified file path
   
   Args:
-  filepath = the directory path to recursively scan each file
+    filepath = the directory path to recursively scan each file
 
   Returns:
   A dictionary linking the file path to its respective hash
@@ -82,7 +82,23 @@ def scan_hash(filepath):
         h.update(content)
       hashes[os.path.join(root,name)] = h.hexdigest()
   return hashes
-      
+
+def store_baseline(hashes):
+  """
+  Connects to the SQLite database to add the hashes directory into the tables
+
+  Args:
+    Hashes: A dictionary containing each file's path and its respective hash
+  """
+  connection = sqlite3.connect(DB_PATH)
+  cursor = connection.cursor()
+
+  for filepath, file_hash in hashes.items():
+    cursor.execute("""
+    INSERT INTO baselines (filepath, hash, timestamp, status) VALUES (?,?,?,?)
+    """, (filepath, file_hash, datetime.now().isoformat(), "active"))
+  connection.commit()
+  connection.close()
       
 
 
