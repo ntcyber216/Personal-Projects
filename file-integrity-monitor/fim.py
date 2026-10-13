@@ -109,7 +109,26 @@ def store_baseline(hashes):
       filename = LOG_PATH,
       level = logging.INFO,
       format = '%(asctime)s | %(levelname)s | %(message)s'
-    ) 
+    )
+    
+  def make_log(event_type, message):
+    """
+    Reusable function to add the log both into the log file and log table in SQLite
+    """
+    match event_type:
+      case "WARNING":
+        logging.warning(message)
+      case "ERROR":
+        logging.error(message)
+      case _:
+        logging.info(message)
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    cursor.execute("""
+    INSERT INTO logs (timestamp, message, event) VALUES (?,?,?)
+    """, (datetime.now().isoformat(), message, event_type))
+    connection.commit()
+    connection.close()
     
 
 
