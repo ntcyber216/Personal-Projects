@@ -39,6 +39,9 @@ def initialize_database():
   connection.close()
 
 def user_config():
+  """Sets up the user inputs and configurations for the file path and interval
+  Returns: the user inputted file path and time interval
+  """
   while True:
     filepath = input("Enter the file path you wish to monitor. ")
     if os.path.exists(filepath):
@@ -58,6 +61,13 @@ def user_config():
   return filepath, interval
 
 def scan_hash(filepath):
+  """Scans each file recursively within the specified file path
+  Args:
+  filepath: the directory path to recursively scan each file
+
+  Returns:
+  A dictionary linking the file path to its respective hash
+  """
   hashes = {}
   for root, dirs, files in os.walk(filepath, topdown = False):
     for name in files:
