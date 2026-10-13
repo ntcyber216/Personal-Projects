@@ -38,6 +38,38 @@ def initialize_database():
   connection.commit()
   connection.close()
 
+def user_config():
+  while True:
+    filepath = input("Enter the file path you wish to monitor. ")
+    if os.path.exists(filepath):
+      break
+    else:
+      print("File path not found.")
+    
+  while True:
+    try:
+      interval = int(input("Enter the interval of time for each check: "))
+      if interval > 0:
+        break
+      else:
+        print("Please enter a positive number.")
+    except ValueError:
+      print("Please enter a valid number")
+  return filepath, interval
+
+def scan_hash(filepath):
+  hashes = {}
+  for root, dirs, files in os.walk(filepath, topdown = False):
+    for name in files:
+      h = hashlib.new('sha256')
+      with open(os.path.join(root,name), 'rb') as f:
+        content = f.read()
+        h.update(content)
+      hashes[os.path.join(root,name)] = h.hexdigest()
+  return hashes
+      
+      
+
 
 
 if __name__ == "__main__":
