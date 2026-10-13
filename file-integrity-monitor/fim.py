@@ -7,7 +7,9 @@ FIM_DIR = os.path.expanduser("~/.fim")
 DB_PATH = os.path.expanduser("~/.fim/fim_data.db")
 
 def initialize_database():
-  """Creates the  ~/.fim directory and fim_data.db database while creating the 3 tables we will be storing data in within SQLite"""
+  """
+  Creates the  ~/.fim directory and fim_data.db database while creating the 3 tables we will be storing data in within SQLite
+  """
   os.makedirs(FIM_DIR, exist_ok = True)
   connection = sqlite3.connect(DB_PATH)
   cursor = connection.cursor()
@@ -39,7 +41,8 @@ def initialize_database():
   connection.close()
 
 def user_config():
-  """Sets up the user inputs and configurations for the file path and interval
+  """
+  Sets up the user inputs and configurations for the file path and interval
   Returns: the user inputted file path and time interval
   """
   while True:
@@ -61,9 +64,11 @@ def user_config():
   return filepath, interval
 
 def scan_hash(filepath):
-  """Scans each file recursively within the specified file path
+  """
+  Scans each file recursively within the specified file path
+  
   Args:
-  filepath: the directory path to recursively scan each file
+  filepath = the directory path to recursively scan each file
 
   Returns:
   A dictionary linking the file path to its respective hash
