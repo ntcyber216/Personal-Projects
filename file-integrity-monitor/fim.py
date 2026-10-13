@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 FIM_DIR = os.path.expanduser("~/.fim")
 DB_PATH = os.path.expanduser("~/.fim/fim_data.db")
+LOG_PATH = os.path.expanduser("~/.fim/fim.log")
 
 def initialize_database():
   """
@@ -99,9 +100,20 @@ def store_baseline(hashes):
     """, (filepath, file_hash, datetime.now().isoformat(), "active"))
   connection.commit()
   connection.close()
-      
+
+  def setup_log():
+    """
+    Sets up the python logging library to add the logs in the format: time | level | message
+    """
+    logging.basicConfig(
+      filename = LOG_PATH,
+      level = logging.INFO,
+      format = '%(asctime)s | %(levelname)s | %(message)s'
+    ) 
+    
 
 
 
 if __name__ == "__main__":
-    pass
+  setup_log()
+  pass
