@@ -1,3 +1,4 @@
+import sys
 import sqlite3
 import hashlib
 import os
@@ -332,4 +333,13 @@ def rebaseline():
 
 if __name__ == "__main__":
   setup_log()
-  pass
+  if len(sys.argv) < 2:
+    print("Usage: python fim.py --setup | --check | --rebaseline")
+  elif sys.argv[1] == "--setup":
+    setup()
+  elif sys.argv[1] == "--check" or sys.argv[1] == "--scan":
+    check()
+  elif sys.argv[1] == "--rebaseline":
+    rebaseline()
+  else:
+    print("Usage: python fim.py --setup | --check | --rebaseline")
