@@ -322,15 +322,6 @@ def rebaseline():
       
       
     
-        
-
-
-    
-    
-          
-      
-      
-
 if __name__ == "__main__":
   setup_log()
   if len(sys.argv) < 2:
