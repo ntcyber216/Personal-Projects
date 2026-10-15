@@ -148,6 +148,7 @@ def store_baseline(hashes):
     # TODO: Register with OS scheduler
 
   def check():
+    changes = False
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     
@@ -167,11 +168,14 @@ def store_baseline(hashes):
       if filepath in baseline_dict:
         if baseline_dict[filepath] != filehash:
           make_log("WARNING", f"{filepath} has been altered.")
+          changes = True
       else:
         make_log("WARNING", f"{filepath} has an unexpected file.")
-    
+        changes = True
+
     make_log("INFO", "Scan completed.")
     connection.close()
+    return changes
         
       
 
