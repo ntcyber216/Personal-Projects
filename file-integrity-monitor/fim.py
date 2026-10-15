@@ -7,6 +7,61 @@ FIM_DIR = os.path.expanduser("~/.fim")
 DB_PATH = os.path.expanduser("~/.fim/fim_data.db")
 LOG_PATH = os.path.expanduser("~/.fim/fim.log")
 
+def get_yes_no(question):
+  """
+  Helper function to request a y/n from the user and validate the input.
+  
+  Args:
+    question = the question to ask the user
+  Returns:
+    user = the y or n answer from the user
+  """
+  while True:
+    user = input(question)
+    if user == "y":
+      return True
+    elif user == "n":
+      return False
+    else:
+      print("Enter a valid answer.")
+        
+def get_number(question, min):
+  """
+  Helper function to request a number from the user and validate the input.
+  
+  Args:
+    question = the question to ask the user
+    min = the minimum value allowed, exclusive
+  Returns:
+    number = the number from the user
+  """
+  while True:
+    try:
+      number = int(input(question))
+      if number > min:
+        return number
+      else:
+        print("Please enter a greater number. ")
+    except ValueError:
+      print("Please enter a valid number. ")
+
+def get_file(question):
+  """
+  Helper function to request a filepath from the user and validate the input.
+
+  Args:
+    question = the question you want to ask the user
+  Returns:
+    filepath = the validated filepath
+  """
+  while True:
+    filepath = input(question)
+    if os.path.exists(filepath):
+      return filepath
+    else:
+      print("File path not found.")
+  
+
 def initialize_database():
   """
   Creates the  ~/.fim directory and fim_data.db database while creating the 3 tables we will be storing data in within SQLite
@@ -44,24 +99,13 @@ def initialize_database():
 def user_config():
   """
   Sets up the user inputs and configurations for the file path and interval
-  Returns: the user inputted file path and time interval
+  
+  Returns: 
+    The user inputted file path and time interval
   """
-  while True:
-    filepath = input("Enter the file path you wish to monitor. ")
-    if os.path.exists(filepath):
-      break
-    else:
-      print("File path not found.")
-    
-  while True:
-    try:
-      interval = int(input("Enter the interval of time for each check: "))
-      if interval > 0:
-        break
-      else:
-        print("Please enter a positive number.")
-    except ValueError:
-      print("Please enter a valid number")
+
+  filepath = get_file("Enter the file path you wish to monitor. ")
+  interval = get_number("Enter the time interval you want to periodically check.", 0) 
   return filepath, interval
 
 def scan_hash(filepath):
@@ -72,7 +116,7 @@ def scan_hash(filepath):
     filepath = the directory path to recursively scan each file
 
   Returns:
-  A dictionary linking the file path to its respective hash
+    A dictionary linking the file path to its respective hash
   """
   hashes = {}
   for root, dirs, files in os.walk(filepath, topdown = False):
@@ -101,82 +145,189 @@ def store_baseline(hashes):
   connection.commit()
   connection.close()
 
-  def setup_log():
-    """
-    Sets up the python logging library to add the logs in the format: time | level | message
-    """
-    logging.basicConfig(
-      filename = LOG_PATH,
-      level = logging.INFO,
-      format = '%(asctime)s | %(levelname)s | %(message)s'
-    )
+def setup_log():
+  """
+  Sets up the python logging library to add the logs in the format: time | level | message
+  """
+  logging.basicConfig(
+    filename = LOG_PATH,
+    level = logging.INFO,
+    format = '%(asctime)s | %(levelname)s | %(message)s'
+  )
     
-  def make_log(event_type, message):
-    """
-    Reusable function to add the log both into the log file and log table in SQLite
-    """
-    match event_type:
-      case "WARNING":
-        logging.warning(message)
-      case "ERROR":
-        logging.error(message)
-      case _:
-        logging.info(message)
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    cursor.execute("""
-    INSERT INTO logs (timestamp, message, event) VALUES (?,?,?)
-    """, (datetime.now().isoformat(), message, event_type))
-    connection.commit()
-    connection.close()
+def make_log(event_type, message):
+  """
+  Reusable function to add the log both into the log file and log table in SQLite
+  """
+  match event_type:
+    case "WARNING":
+      logging.warning(message)
+    case "ERROR":
+      logging.error(message)
+    case _:
+      logging.info(message)
+  connection = sqlite3.connect(DB_PATH)
+  cursor = connection.cursor()
+  cursor.execute("""
+  INSERT INTO logs (timestamp, message, event) VALUES (?,?,?)
+  """, (datetime.now().isoformat(), message, event_type))
+  connection.commit()
+  connection.close()
 
-  def setup():
-    initialize_database()
-    filepath, interval = user_config()
+def setup():
+  """
+  Sets up the dataase and stores the baseline
+  """
+  initialize_database()
+  filepath, interval = user_config()
     
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    cursor.execute("""
-    INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
-    """, (interval, datetime.now().isoformat(), filepath, "active"))
-    connection.commit()
-    connection.close()
+  connection = sqlite3.connect(DB_PATH)
+  cursor = connection.cursor()
+  cursor.execute("""
+  INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
+  """, (interval, datetime.now().isoformat(), filepath, "active"))
+  connection.commit()
+  connection.close()
     
-    store_baseline(scan_hash(filepath))
-    make_log("INFO", "Baseline stored successfuly.")
-    # TODO: Call check function for first integrity check
-    # TODO: Register with OS scheduler
+  store_baseline(scan_hash(filepath))
+  make_log("INFO", "Baseline stored successfuly.")
+  # TODO: Call check function for first integrity check
+  # TODO: Register with OS scheduler
 
-  def check():
-    changes = False
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    
-    cursor.execute("""
-    SELECT filepath FROM config WHERE status = 'active'
-    """)
-    newfilepath = cursor.fetchone()
-    newhash = scan_hash(newfilepath[0])
-    
-    cursor.execute("""
-    SELECT filepath, hash FROM baselines WHERE status = 'active'
-    """)
-    baseline = cursor.fetchall()
-    baseline_dict = dict(baseline)
+def check():
+  """
+  Scanning function that checks if the baseline hashes agree with the current hashes
 
-    for filepath, filehash in newhash.items():
-      if filepath in baseline_dict:
-        if baseline_dict[filepath] != filehash:
-          make_log("WARNING", f"{filepath} has been altered.")
-          changes = True
-      else:
-        make_log("WARNING", f"{filepath} has an unexpected file.")
+  Returns:
+    changes = true if changes are detected, false otherwise
+  """
+  changes = False
+  connection = sqlite3.connect(DB_PATH)
+  cursor = connection.cursor()
+    
+  cursor.execute("""
+  SELECT filepath FROM config WHERE status = 'active'
+  """)
+  newfilepath = cursor.fetchone()
+  newhash = scan_hash(newfilepath[0])
+    
+  cursor.execute("""
+  SELECT filepath, hash FROM baselines WHERE status = 'active'
+  """)
+  baseline_dict = dict(cursor.fetchall())
+
+  for filepath, filehash in newhash.items():
+    if filepath in baseline_dict:
+      if baseline_dict[filepath] != filehash:
+        make_log("WARNING", f"{filepath} has been altered.")
         changes = True
+    else:
+      make_log("WARNING", f"{filepath} has an unexpected file.")
+      changes = True
 
-    make_log("INFO", "Scan completed.")
-    connection.close()
-    return changes
+  make_log("INFO", "Scan completed.")
+  connection.close()
+  return changes
+
+def rebaseline():
+  """
+  Function that handles the rebaseline process of querying the user and changing the baseline if requested
+  """
+  connection = sqlite3.connect(DB_PATH)
+  cursor = connection.cursor()
+    
+  if check():
+    if get_yes_no("Changes detected, do you wish to establish a new hash? (y/n): "):
+      make_log("INFO", "New baseline hash requested.")
+      if get_yes_no("Do you wish to establish a new interval? (y/n): "):
+        interval = get_number("Enter the interval of time for each check. ", 0)
+        make_log("INFO", f"Time interval changed to {interval}")
+      else:
+        cursor.execute("""
+        SELECT interval FROM config WHERE status = 'active'
+        """)
+        interval = int(cursor.fetchone()[0])
+      if get_yes_no("Do you want to monitor a new file path? (y/n): "):
+        filepath = get_file("Enter the desired file path: ")
+        make_log("INFO", f"Filepath changed to {filepath}")
+      else:
+        cursor.execute("""
+        SELECT filepath FROM config WHERE status = 'active'
+        """)
+        filepath = cursor.fetchone()[0]
+      if get_yes_no("Do you want to erase the original baseline? (y/n): "):
+        cursor.execute("""
+        DELETE FROM baselines WHERE status = 'active'
+        """)
+        make_log("INFO", "Baseline deleted")
+      else: 
+        cursor.execute("""
+        UPDATE baselines SET status = 'inactive' WHERE status = 'active'
+        """)
+        make_log("INFO", "Baseline deactivated")
+      cursor.execute("""
+      UPDATE config SET status = 'inactive' WHERE status = 'active'
+      """)
+      cursor.execute("""
+      INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
+      """, (interval, datetime.now().isoformat(), filepath, "active"))
+      newhash = scan_hash(filepath)
+      store_baseline(newhash)
+      make_log("INFO", "New baseline stored successfully")
+      check()
+  else:
+    if get_yes_no("No changes detected, do you still wish to establish a new hash? (y/n): "):
+      make_log("INFO", "New baseline hash requested.")
+      if get_yes_no("Do you wish to establish a new interval? (y/n): "):
+        interval = get_number("Enter the interval of time for each check. ", 0)
+        make_log("INFO", f"Time interval changed to {interval}")
+      else:
+        cursor.execute("""
+        SELECT interval FROM config WHERE status = 'active'
+        """)
+        interval = int(cursor.fetchone()[0])
+      if get_yes_no("Do you want to monitor a new file path? (y/n): "):
+        filepath = get_file("Enter the desired file path: ")
+        make_log("INFO", f"Filepath changed to {filepath}")
+      else:
+        cursor.execute("""
+        SELECT filepath FROM config WHERE status = 'active'
+        """)
+        filepath = cursor.fetchone()[0]
+      if get_yes_no("Do you want to erase the original baseline? (y/n): "):
+        cursor.execute("""
+        DELETE FROM baselines WHERE status = 'active'
+        """)
+        make_log("INFO", "Baseline deleted")
+      else: 
+        cursor.execute("""
+        UPDATE baselines SET status = 'inactive' WHERE status = 'active'
+        """)
+        make_log("INFO", "Baseline deactivated")
+      cursor.execute("""
+      UPDATE config SET status = 'inactive' WHERE status = 'active'
+      """)
+      cursor.execute("""
+      INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
+      """, (interval, datetime.now().isoformat(), filepath, "active"))
+      newhash = scan_hash(filepath)
+      store_baseline(newhash)
+      make_log("INFO", "New baseline stored successfully")
+      check()
+    
+  connection.commit()
+  connection.close()
+  #TODO: Re-register script with OS scheduler 
+      
+      
+    
         
+
+
+    
+    
+          
+      
       
 
 if __name__ == "__main__":
