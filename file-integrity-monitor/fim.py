@@ -129,6 +129,23 @@ def store_baseline(hashes):
     """, (datetime.now().isoformat(), message, event_type))
     connection.commit()
     connection.close()
+
+  def setup():
+    initialize_database()
+    filepath, interval = user_config()
+    
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    cursor.execute("""
+    INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
+    """, (interval, datetime.now().isoformat(), filepath, "active"))
+    connection.commit()
+    connection.close()
+    
+    store_baseline(scan_hash(filepath))
+    make_log("INFO", "Baseline stored successfuly.")
+    # TODO: Call check function for first integrity check
+    # TODO: Register with OS scheduler
     
 
 
