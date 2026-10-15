@@ -146,9 +146,34 @@ def store_baseline(hashes):
     make_log("INFO", "Baseline stored successfuly.")
     # TODO: Call check function for first integrity check
     # TODO: Register with OS scheduler
+
+  def check():
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
     
+    cursor.execute("""
+    SELECT filepath FROM config WHERE status = 'active'
+    """)
+    newfilepath = cursor.fetchone()
+    newhash = scan_hash(newfilepath[0])
+    
+    cursor.execute("""
+    SELECT filepath, hash FROM baselines WHERE status = 'active'
+    """)
+    baseline = cursor.fetchall()
+    baseline_dict = dict(baseline)
 
-
+    for filepath, filehash in newhash.items():
+      if filepath in baseline_dict:
+        if baseline_dict[filepath] != filehash:
+          make_log("WARNING", f"{filepath} has been altered.")
+      else:
+        make_log("WARNING", f"{filepath} has an unexpected file.")
+    
+    make_log("INFO", "Scan completed.")
+    connection.close()
+        
+      
 
 if __name__ == "__main__":
   setup_log()
