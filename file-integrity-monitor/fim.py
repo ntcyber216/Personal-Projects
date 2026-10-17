@@ -67,7 +67,6 @@ def initialize_database():
   """
   Creates the  ~/.fim directory and fim_data.db database while creating the 3 tables we will be storing data in within SQLite
   """
-  os.makedirs(FIM_DIR, exist_ok = True)
   connection = sqlite3.connect(DB_PATH)
   cursor = connection.cursor()
   cursor.execute("""
@@ -148,8 +147,9 @@ def store_baseline(hashes):
 
 def setup_log():
   """
-  Sets up the python logging library to add the logs in the format: time | level | message
+  Sets up the fim directory and python logging library to add the logs in the format: time | level | message
   """
+  os.makedirs(FIM_DIR, exist_ok = True)
   logging.basicConfig(
     filename = LOG_PATH,
     level = logging.INFO,
