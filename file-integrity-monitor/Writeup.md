@@ -43,10 +43,40 @@ cursor.execute("""
 INSERT INTO baselines (filepath, hash, timestamp, status) VALUES (?,?,?,?)
 """, (filepath, file_hash, datetime.now().isoformat(), "active"))
 ```
-When I initially wrote it, I wrote it like this:
+When I initially started writing, it looked like this:
 ```python
 cursor.execute("""
 INSERT INTO baselines (filepath, hash, timestamp, status) VALUES (filepath, file_hash, datetime.now, "active")
 """)
 ```
 If you know the basics about using SQL in Python this is a very big red flag for an SQL injection, as the variable named filepath is a user defined string. This means that if the user entered sql code in when prompted, it would execute the code into the database. I learned about how SQL injections worked in Sec+, but I have never actually seen the mechanics of what happens in the code. The fix for this was to instead use this (?,?,?,?) part where instead of passing the values directly it sort of inserts the values into that question mark block as a tuple, meaning it reads any malicious code as a string rather than executable code.
+
+## Python Libraries:
+
+### OS
+As of writing this section, I have not utilized the OS library to register the script to run at the user defined intervals. For now, the main uses for the os library are here:
+```python
+FIM_DIR = os.path.expanduser("~/.fim")
+DB_PATH = os.path.expanduser("~/.fim/fim_data.db")
+LOG_PATH = os.path.expanduser("~/.fim/fim.log")
+```
+And here: 
+```python
+os.makedirs(FIM_DIR, exist_ok = True)
+```
+The os library is a lot more intuitive than I thought. After reading through the documentation and example uses, I mostly understood how to use the os library pretty quickly. 
+
+### Hash Lib
+Here is the section of code where I utilized hashing:
+```python
+hashes = {}
+for root, dirs, files in os.walk(filepath, topdown = False):
+  for name in files:
+    h = hashlib.new('sha256')
+      with open(os.path.join(root,name), 'rb') as f:
+      content = f.read()
+      h.update(content)
+      hashes[os.path.join(root,name)] = h.hexdigest()
+  return hashes
+```
+It is a pretty light implementation, but before this I had not worked with both hashlib or opening files in Python. After only a bit of research, hashlib is pretty simple to use. In this section I had more difficulty getting the for loop to properly work with os.walk because for loops in python were a bit harder for me to understand than Java. In that sense Java's complexity serves to benefit because being able to write in such a detailed way makes it easier to interpret for me, but after a bit research and example bits of code in the documentation I was able to figure it out. Another thing I had to utilize here that I did not know fully before was directories. Looking it up I found that it was very similar to hash maps from Java where a data entry is linked to a key. From there I just needed the syntax and it was intuitive to utilize. 
