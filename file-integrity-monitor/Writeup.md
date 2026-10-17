@@ -77,6 +77,6 @@ for root, dirs, files in os.walk(filepath, topdown = False):
       content = f.read()
       h.update(content)
       hashes[os.path.join(root,name)] = h.hexdigest()
-  return hashes
+return hashes
 ```
 It is a pretty light implementation, but before this I had not worked with both hashlib or opening files in Python. After only a bit of research, hashlib is pretty simple to use. In this section I had more difficulty getting the for loop to properly work with os.walk because for loops in python were a bit harder for me to understand than Java. In that sense Java's complexity serves to benefit because being able to write in such a detailed way makes it easier to interpret for me, but after a bit research and example bits of code in the documentation I was able to figure it out. Another thing I had to utilize here that I did not know fully before was directories. Looking it up I found that it was very similar to hash maps from Java where a data entry is linked to a key. From there I just needed the syntax and it was intuitive to utilize. 
