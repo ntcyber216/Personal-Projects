@@ -234,10 +234,10 @@ def rebaseline():
   """
   Function that handles the rebaseline process of querying the user and changing the baseline if requested
   """
-  connection = sqlite3.connect(DB_PATH)
-  cursor = connection.cursor()
     
   if check():
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
     if get_yes_no("Changes detected, do you wish to establish a new hash? (y/n): "):
       make_log("INFO", "New baseline hash requested.")
       if get_yes_no("Do you wish to establish a new interval? (y/n): "):
@@ -277,6 +277,8 @@ def rebaseline():
       make_log("INFO", "New baseline stored successfully")
       check()
   else:
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
     if get_yes_no("No changes detected, do you still wish to establish a new hash? (y/n): "):
       make_log("INFO", "New baseline hash requested.")
       if get_yes_no("Do you wish to establish a new interval? (y/n): "):
