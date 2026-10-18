@@ -216,6 +216,7 @@ def check():
   SELECT filepath, hash FROM baselines WHERE status = 'active'
   """)
   baseline_dict = dict(cursor.fetchall())
+  connection.close()
 
   for filepath, filehash in newhash.items():
     if filepath in baseline_dict:
@@ -227,7 +228,6 @@ def check():
       changes = True
 
   make_log("INFO", "Scan completed.")
-  connection.close()
   return changes
 
 def rebaseline():
@@ -236,90 +236,119 @@ def rebaseline():
   """
     
   if check():
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
     if get_yes_no("Changes detected, do you wish to establish a new hash? (y/n): "):
       make_log("INFO", "New baseline hash requested.")
       if get_yes_no("Do you wish to establish a new interval? (y/n): "):
         interval = get_number("Enter the interval of time for each check. ", 0)
         make_log("INFO", f"Time interval changed to {interval}")
       else:
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         SELECT interval FROM config WHERE status = 'active'
         """)
         interval = int(cursor.fetchone()[0])
+        connection.close()
       if get_yes_no("Do you want to monitor a new file path? (y/n): "):
         filepath = get_file("Enter the desired file path: ")
         make_log("INFO", f"Filepath changed to {filepath}")
       else:
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         SELECT filepath FROM config WHERE status = 'active'
         """)
         filepath = cursor.fetchone()[0]
+        connection.close()
       if get_yes_no("Do you want to erase the original baseline? (y/n): "):
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         DELETE FROM baselines WHERE status = 'active'
         """)
+        connection.commit()
+        connection.close()
         make_log("INFO", "Baseline deleted")
       else: 
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         UPDATE baselines SET status = 'inactive' WHERE status = 'active'
         """)
+        connection.commit()
+        connection.close()
         make_log("INFO", "Baseline deactivated")
+      connection = sqlite3.connect(DB_PATH)
+      cursor = connection.cursor()
       cursor.execute("""
       UPDATE config SET status = 'inactive' WHERE status = 'active'
       """)
       cursor.execute("""
       INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
       """, (interval, datetime.now().isoformat(), filepath, "active"))
+      connection.commit()
+      connection.close()
       newhash = scan_hash(filepath)
       store_baseline(newhash)
       make_log("INFO", "New baseline stored successfully")
       check()
   else:
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    if get_yes_no("No changes detected, do you still wish to establish a new hash? (y/n): "):
+    if get_yes_no("No changes detected, do you wish to establish a new hash? (y/n): "):
       make_log("INFO", "New baseline hash requested.")
       if get_yes_no("Do you wish to establish a new interval? (y/n): "):
         interval = get_number("Enter the interval of time for each check. ", 0)
         make_log("INFO", f"Time interval changed to {interval}")
       else:
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         SELECT interval FROM config WHERE status = 'active'
         """)
         interval = int(cursor.fetchone()[0])
+        connection.close()
       if get_yes_no("Do you want to monitor a new file path? (y/n): "):
         filepath = get_file("Enter the desired file path: ")
         make_log("INFO", f"Filepath changed to {filepath}")
       else:
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         SELECT filepath FROM config WHERE status = 'active'
         """)
         filepath = cursor.fetchone()[0]
+        connection.close()
       if get_yes_no("Do you want to erase the original baseline? (y/n): "):
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         DELETE FROM baselines WHERE status = 'active'
         """)
+        connection.commit()
+        connection.close()
         make_log("INFO", "Baseline deleted")
       else: 
+        connection = sqlite3.connect(DB_PATH)
+        cursor = connection.cursor()
         cursor.execute("""
         UPDATE baselines SET status = 'inactive' WHERE status = 'active'
         """)
+        connection.commit()
+        connection.close()
         make_log("INFO", "Baseline deactivated")
+      connection = sqlite3.connect(DB_PATH)
+      cursor = connection.cursor()
       cursor.execute("""
       UPDATE config SET status = 'inactive' WHERE status = 'active'
       """)
       cursor.execute("""
       INSERT INTO config (interval, timestamp, filepath, status) VALUES (?,?,?, ?)
       """, (interval, datetime.now().isoformat(), filepath, "active"))
+      connection.commit()
+      connection.close()
       newhash = scan_hash(filepath)
       store_baseline(newhash)
       make_log("INFO", "New baseline stored successfully")
       check()
-    
-  connection.commit()
-  connection.close()
   #TODO: Re-register script with OS scheduler 
       
       
