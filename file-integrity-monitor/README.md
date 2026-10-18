@@ -1,5 +1,8 @@
 # File Integrity Monitor
 
+## Requirements
+Python 3.10 or higher
+
 ## Overview
 This will be a Python-based file integrity monitoring tool to detect any changes within a user specified set of files/directories.
 
