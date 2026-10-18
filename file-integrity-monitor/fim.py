@@ -195,7 +195,7 @@ def setup():
   # TODO: Call check function for first integrity check
   # TODO: Register with OS scheduler
 
-def check():
+def check(verbose = False):
   """
   Scanning function that checks if the baseline hashes agree with the current hashes
 
@@ -228,6 +228,11 @@ def check():
       changes = True
 
   make_log("INFO", "Scan completed.")
+  if verbose:
+    if changes:
+      print("Changes Detected")
+    else:
+      print("No changes Detected")
   return changes
 
 def rebaseline():
@@ -360,7 +365,7 @@ if __name__ == "__main__":
   elif sys.argv[1] == "--setup":
     setup()
   elif sys.argv[1] == "--check" or sys.argv[1] == "--scan":
-    check()
+    check(verbose = True)
   elif sys.argv[1] == "--rebaseline":
     rebaseline()
   else:
